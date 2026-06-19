@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JD Intake Lite - Truck Log Importer
 // @namespace    JDFlow
-// @version      1.1
+// @version      1.2
 // @description  Importar partidas de Truck Log Excel a SILA Pre Entrada
 // @match        *://*/MainSila/*
 // @match        *://*/PreEntrada*

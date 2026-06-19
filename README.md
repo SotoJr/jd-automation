@@ -28,17 +28,17 @@ Built and maintained by Miguel Soto.
 
 Integrated operational tools running directly inside SILA:
 
-- 📦 Tracking Management
-- 📄 Document Access
-- 🚚 Dispatch Integration
-- 🔍 Intelligent ODC Hover Information
-- ⚡ Workflow Enhancements
+-  Tracking Management
+-  Document Access
+-  Dispatch Integration
+-  Intelligent ODC Hover Information
+-  Workflow Enhancements
 
 ---
 
 ## Modules
 
-### 📥 JD Intake Lite
+###  JD Intake Lite
 
 Truck Log importer for SILA Pre Entrada.
 
@@ -53,7 +53,7 @@ Features:
 
 ---
 
-### 📦 SILA Tracking + Docs
+###  SILA Tracking + Docs
 
 Tracking and document visibility toolkit.
 
@@ -67,7 +67,7 @@ Features:
 
 ---
 
-### 🚚 Dispatch Integration
+###  Dispatch Integration
 
 Direct connection between SILA and JD Flow.
 
@@ -149,7 +149,7 @@ Current measured results:
 
 ## Related Projects
 
-### 🚀 JD Flow
+###  JD Flow
 
 Internal dispatch workflow platform focused on:
 
@@ -159,11 +159,11 @@ Internal dispatch workflow platform focused on:
 - Audit history
 - KPI dashboards
 
-### 📈 Pulso Marketing
+###  Pulso Marketing
 
 Digital marketing and automation solutions for local businesses.
 
-### 🤖 Fill Class AI
+###  Fill Class AI
 
 Attendance automation platform for fitness businesses.
 

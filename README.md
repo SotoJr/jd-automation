@@ -27,3 +27,13 @@ Ejemplo:
 - 1.0 versión inicial
 - 1.1 corrección menor
 - 2.0 cambio grande
+
+## Screenshots
+
+### JD Intake Lite
+
+![JD Intake Lite](docs/screenshots/truck-log-importer.png)
+
+### Tracking + Docs
+
+![Tracking + Docs](docs/screenshots/tracking-docs.png)

@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         SILA Tracking + Docs
 // @namespace    JDFlow
-// @version      2.1
+// @version      2.2
 // @description  Tracking, hover ODC y descarga de documentos en SILA
 // @match        *://*/MainSila/*
 // @grant        none
-// @updateURL    https://raw.githubusercontent.com/SotoJr/jd-automation/main/tracking/sila-tracking-loader.user.js
-// @downloadURL  https://raw.githubusercontent.com/SotoJr/jd-automation/main/tracking/sila-tracking-loader.user.js
+// @updateURL    https://raw.githubusercontent.com/SotoJr/jd-automation/main/tracking/sila-tracking-docs.user.js
+// @downloadURL  https://raw.githubusercontent.com/SotoJr/jd-automation/main/tracking/sila-tracking-docs.user.js
 // ==/UserScript==
 
 console.log("🚀 SILA Tools iniciado");

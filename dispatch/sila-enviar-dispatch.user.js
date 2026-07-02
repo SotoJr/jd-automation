@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SILA - Enviar a Dispatch
 // @namespace    JDFlow
-// @version      1.8
+// @version      1.9
 // @description  Enviar órdenes SILA a JD Flow Dispatch Board
 // @match        *://*/MainSila/*
 // @grant        none
@@ -135,157 +135,160 @@
     info.innerText = `OT: ${ordenTrabajo} | ODC: ${ordenCarga}`;
   }
 
- async function buscarOrdenExistente(ordenTrabajo, ordenCarga) {
-  const url =
-    `${SUPABASE_URL}/rest/v1/dispatch_orders` +
-    `?orden_trabajo=eq.${encodeURIComponent(ordenTrabajo)}` +
-    `&orden_carga=eq.${encodeURIComponent(ordenCarga)}` +
-    `&select=id,orden_trabajo,orden_carga,status`;
+  async function buscarOrdenExistente(ordenTrabajo, ordenCarga) {
+    const url =
+      `${SUPABASE_URL}/rest/v1/dispatch_orders` +
+      `?orden_trabajo=eq.${encodeURIComponent(ordenTrabajo)}` +
+      `&orden_carga=eq.${encodeURIComponent(ordenCarga)}` +
+      `&select=id,orden_trabajo,orden_carga,status`;
 
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json'
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText);
     }
-  });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText);
+    return await response.json();
   }
-
-  return await response.json();
-}
 
   async function insertarOrden(nuevaOrden) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/dispatch_orders`, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify(nuevaOrden)
-  });
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/dispatch_orders`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(nuevaOrden)
+    });
 
-  const responseText = await response.text();
+    const responseText = await response.text();
 
-  console.log('STATUS:', response.status);
-  console.log('RESPONSE:', responseText);
+    console.log('STATUS:', response.status);
+    console.log('RESPONSE:', responseText);
 
-  if (response.ok) {
-    alert('Orden enviada a Dispatch correctamente');
-  } else {
-    alert('Error al enviar a Dispatch: ' + response.status);
-    console.error('Error Supabase:', responseText);
-  }
-}
-
-    function extraerTrackingDesdeOrdenTrabajo(row) {
-  const cells = row.querySelectorAll('td');
-
-  for (const cell of cells) {
-    const aria = cell.getAttribute('aria-label') || '';
-
-    if (aria.includes('Column Orden Trabajo, Value')) {
-      const texto = cell.innerText || '';
-
-      // Remover la OT de 7 dígitos
-      const sinOT = texto.replace(/\b\d{7}\b/, '').trim();
-
-      // Buscar tracking después de carrier
-      const carrierMatch = sinOT.match(/(?:FedEx|UPS|DHL|USPS|TForce|Estes|ABF|XPO|Old Dominion|Saia)?\s*:?\s*([A-Z0-9\-\/]{8,})/i);
-
-      if (carrierMatch && carrierMatch[1]) {
-        return carrierMatch[1].trim();
-      }
-
-      return '';
+    if (response.ok) {
+      alert('Orden enviada a Dispatch correctamente');
+    } else {
+      alert('Error al enviar a Dispatch: ' + response.status);
+      console.error('Error Supabase:', responseText);
     }
   }
 
-  return '';
-}
+  function extraerTrackingDesdeOrdenTrabajo(row) {
+    const cells = row.querySelectorAll('td');
+
+    for (const cell of cells) {
+      const aria = cell.getAttribute('aria-label') || '';
+
+      if (aria.includes('Column Orden Trabajo, Value')) {
+        const texto = cell.innerText || '';
+
+        // Remover la OT de 7 dígitos
+        const sinOT = texto.replace(/\b\d{7}\b/, '').trim();
+
+        // Buscar tracking después de carrier
+        const carrierMatch = sinOT.match(/(?:FedEx|UPS|DHL|USPS|TForce|Estes|ABF|XPO|Old Dominion|Saia)?\s*:?\s*([A-Z0-9\-\/]{8,})/i);
+
+        if (carrierMatch && carrierMatch[1]) {
+          return carrierMatch[1].trim();
+        }
+
+        return '';
+      }
+    }
+
+    return '';
+  }
 
   function enviarADispatch() {
-  const fila = obtenerFilaSeleccionada();
+    const fila = obtenerFilaSeleccionada();
 
-  if (!fila) {
-    alert('Selecciona una fila antes de enviar a Dispatch.');
-    return;
+    if (!fila) {
+      alert('Selecciona una fila antes de enviar a Dispatch.');
+      return;
+    }
+
+    const cliente = getValueFromRow(fila, 'Cliente');
+    const ordenTrabajo = getValueFromRow(fila, 'Orden Trabajo');
+    const ordenCarga = getValueFromRow(fila, 'Orden Carga');
+    const tracking = extraerTrackingDesdeOrdenTrabajo(fila);
+    const tarimas = Number(getValueFromRow(fila, 'Cant.')) || 0;
+    const almacen = getValueFromRow(fila, 'Almacen');
+    const transportista = '';
+    const referencia1 = getValueFromRow(fila, 'Referencia #1');
+    const referencia2 = getValueFromRow(fila, 'Referencia #2');
+    const referencia3 = getValueFromRow(fila, 'Referencia #3');
+    const observaciones = getValueFromRow(fila, 'Observaciones');
+
+    const jdUser =
+      sessionStorage.getItem('username') ||
+      sessionStorage.getItem('user') ||
+      'SILA';
+
+    const nuevaOrden = {
+      cliente: cliente,
+      orden_trabajo: ordenTrabajo,
+      orden_carga: ordenCarga,
+      almacen: almacen,
+      transportista: transportista,
+      referencia_1: referencia1,
+      referencia_2: referencia2,
+      referencia_3: referencia3,
+      observaciones: observaciones,
+      tracking: tracking,
+      tarimas: tarimas,
+      comentarios: 'Orden enviada automáticamente desde SILA',
+      status: 'GENERADO',
+      procesado_por: jdUser,
+      revisado_por_sd: '',
+      paquete_url: '',
+      created_by: jdUser,
+      generated_at: new Date().toISOString()
+    };
+
+    console.log('Usuario JD detectado:', jdUser);
+    console.log('Orden detectada:', nuevaOrden);
+
+    if (!cliente || !ordenTrabajo || !ordenCarga) {
+      alert('Faltan datos obligatorios: cliente, OT u ODC. Revisa la fila seleccionada.');
+      return;
+    }
+
+    (async function () {
+      try {
+        const existentes = await buscarOrdenExistente(ordenTrabajo, ordenCarga);
+
+        if (existentes && existentes.length > 0) {
+          const existente = existentes[0];
+
+          alert(
+            `Esta orden ya fue enviada a Dispatch.\n\n` +
+            `OT: ${existente.orden_trabajo}\n` +
+            `ODC: ${existente.orden_carga}\n` +
+            `Status actual: ${existente.status}`
+          );
+
+          return;
+        }
+
+        await insertarOrden(nuevaOrden);
+
+      } catch (error) {
+        alert('No se pudo enviar la orden a Dispatch.');
+        console.error('Error enviando a Dispatch:', error);
+      }
+    })();
   }
-
-  const cliente = getValueFromRow(fila, 'Cliente');
-  const ordenTrabajo = getValueFromRow(fila, 'Orden Trabajo');
-  const ordenCarga = getValueFromRow(fila, 'Orden Carga');
-  const tracking = extraerTrackingDesdeOrdenTrabajo(fila);
-  const tarimas = Number(getValueFromRow(fila, 'Cant.')) || 0;
-  const almacen = getValueFromRow(fila, 'Almacen');
-  const transportista = '';
-  const referencia1 = getValueFromRow(fila, 'Referencia #1');
-  const referencia2 = getValueFromRow(fila, 'Referencia #2');
-  const referencia3 = getValueFromRow(fila, 'Referencia #3');
-  const observaciones = getValueFromRow(fila, 'Observaciones');
-
-  const jdUser =
-    sessionStorage.getItem('username') ||
-    sessionStorage.getItem('user') ||
-    'SILA';
-
-  const nuevaOrden = {
-    cliente: cliente,
-    orden_trabajo: ordenTrabajo,
-    orden_carga: ordenCarga,
-    almacen: almacen,
-    transportista: transportista,
-    referencia_1: referencia1,
-    referencia_2: referencia2,
-    referencia_3: referencia3,
-    observaciones: observaciones,
-    tracking: tracking,
-    tarimas: tarimas,
-    comentarios: 'Orden enviada automáticamente desde SILA',
-    status: 'GENERADO',
-    procesado_por: jdUser,
-    revisado_por_sd: '',
-    paquete_url: '',
-    created_by: jdUser,
-    generated_at: new Date().toISOString()
-  };
-
-  console.log('Usuario JD detectado:', jdUser);
-  console.log('Orden detectada:', nuevaOrden);
-
-  if (!cliente || !ordenTrabajo || !ordenCarga) {
-    alert('Faltan datos obligatorios: cliente, OT u ODC. Revisa la fila seleccionada.');
-    return;
-  }
-
-buscarOrdenExistente(ordenTrabajo, ordenCarga, function (error, existentes) {
-  if (error) {
-    alert('No se pudo validar si la orden ya existe.');
-    console.error('Error validando duplicado:', error);
-    return;
-  }
-
-  if (existentes && existentes.length > 0) {
-    const existente = existentes[0];
-
-    alert(
-      `Esta orden ya fue enviada a Dispatch.\n\n` +
-      `OT: ${existente.orden_trabajo}\n` +
-      `ODC: ${existente.orden_carga}\n` +
-      `Status actual: ${existente.status}`
-    );
-
-    return;
-  }
-
-  insertarOrden(nuevaOrden);
-});
 
   setInterval(crearBotonDispatch, 2000);
   setInterval(updateDispatchButtonState, 1000);
@@ -293,4 +296,5 @@ buscarOrdenExistente(ordenTrabajo, ordenCarga, function (error, existentes) {
   document.addEventListener('click', function () {
     setTimeout(updateDispatchButtonState, 300);
   });
+
 })();

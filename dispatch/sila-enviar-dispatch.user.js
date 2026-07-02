@@ -4,8 +4,7 @@
 // @version      1.8
 // @description  Enviar órdenes SILA a JD Flow Dispatch Board
 // @match        *://*/MainSila/*
-// @grant        GM_xmlhttpRequest
-// @connect      oejjdtsvgzxjdabgvvbl.supabase.co
+// @grant        none
 // @updateURL    https://raw.githubusercontent.com/SotoJr/jd-automation/main/dispatch/sila-enviar-dispatch.user.js
 // @downloadURL  https://raw.githubusercontent.com/SotoJr/jd-automation/main/dispatch/sila-enviar-dispatch.user.js
 // ==/UserScript==
@@ -136,62 +135,54 @@
     info.innerText = `OT: ${ordenTrabajo} | ODC: ${ordenCarga}`;
   }
 
-  function buscarOrdenExistente(ordenTrabajo, ordenCarga, callback) {
-    const url =
-      `${SUPABASE_URL}/rest/v1/dispatch_orders` +
-      `?orden_trabajo=eq.${encodeURIComponent(ordenTrabajo)}` +
-      `&orden_carga=eq.${encodeURIComponent(ordenCarga)}` +
-      `&select=id,orden_trabajo,orden_carga,status`;
+ async function buscarOrdenExistente(ordenTrabajo, ordenCarga) {
+  const url =
+    `${SUPABASE_URL}/rest/v1/dispatch_orders` +
+    `?orden_trabajo=eq.${encodeURIComponent(ordenTrabajo)}` +
+    `&orden_carga=eq.${encodeURIComponent(ordenCarga)}` +
+    `&select=id,orden_trabajo,orden_carga,status`;
 
-    GM_xmlhttpRequest({
-      method: 'GET',
-      url: url,
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      onload: function (response) {
-        if (response.status >= 200 && response.status < 300) {
-          const data = JSON.parse(response.responseText || '[]');
-          callback(null, data);
-        } else {
-          callback(new Error(response.responseText), null);
-        }
-      },
-      onerror: function (error) {
-        callback(error, null);
-      }
-    });
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText);
   }
 
-  function insertarOrden(nuevaOrden) {
-    GM_xmlhttpRequest({
-      method: 'POST',
-      url: `${SUPABASE_URL}/rest/v1/dispatch_orders`,
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      },
-      data: JSON.stringify(nuevaOrden),
-      onload: function (response) {
-        console.log('STATUS:', response.status);
-        console.log('RESPONSE:', response.responseText);
+  return await response.json();
+}
 
-        if (response.status >= 200 && response.status < 300) {
-          alert('Orden enviada a Dispatch correctamente');
-        } else {
-          alert('Error al enviar a Dispatch: ' + response.status);
-        }
-      },
-      onerror: function (error) {
-        alert('Error de conexión con Supabase');
-        console.error('GM ERROR:', error);
-      }
-    });
+  async function insertarOrden(nuevaOrden) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/dispatch_orders`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(nuevaOrden)
+  });
+
+  const responseText = await response.text();
+
+  console.log('STATUS:', response.status);
+  console.log('RESPONSE:', responseText);
+
+  if (response.ok) {
+    alert('Orden enviada a Dispatch correctamente');
+  } else {
+    alert('Error al enviar a Dispatch: ' + response.status);
+    console.error('Error Supabase:', responseText);
   }
+}
 
     function extraerTrackingDesdeOrdenTrabajo(row) {
   const cells = row.querySelectorAll('td');
@@ -273,29 +264,28 @@
     return;
   }
 
-  buscarOrdenExistente(ordenTrabajo, ordenCarga, function (error, existentes) {
-    if (error) {
-      alert('No se pudo validar si la orden ya existe.');
-      console.error('Error validando duplicado:', error);
-      return;
-    }
+buscarOrdenExistente(ordenTrabajo, ordenCarga, function (error, existentes) {
+  if (error) {
+    alert('No se pudo validar si la orden ya existe.');
+    console.error('Error validando duplicado:', error);
+    return;
+  }
 
-    if (existentes && existentes.length > 0) {
-      const existente = existentes[0];
+  if (existentes && existentes.length > 0) {
+    const existente = existentes[0];
 
-      alert(
-        `Esta orden ya fue enviada a Dispatch.\n\n` +
-        `OT: ${existente.orden_trabajo}\n` +
-        `ODC: ${existente.orden_carga}\n` +
-        `Status actual: ${existente.status}`
-      );
+    alert(
+      `Esta orden ya fue enviada a Dispatch.\n\n` +
+      `OT: ${existente.orden_trabajo}\n` +
+      `ODC: ${existente.orden_carga}\n` +
+      `Status actual: ${existente.status}`
+    );
 
-      return;
-    }
+    return;
+  }
 
-    insertarOrden(nuevaOrden);
-  });
-}
+  insertarOrden(nuevaOrden);
+});
 
   setInterval(crearBotonDispatch, 2000);
   setInterval(updateDispatchButtonState, 1000);

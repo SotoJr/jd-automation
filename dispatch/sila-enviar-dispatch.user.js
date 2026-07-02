@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         SILA - Enviar a Dispatch
 // @namespace    JDFlow
-// @version      1.7
+// @version      1.8
 // @description  Enviar órdenes SILA a JD Flow Dispatch Board
 // @match        *://*/MainSila/*
-// @grant        none
+// @grant        GM_xmlhttpRequest
+// @connect      oejjdtsvgzxjdabgvvbl.supabase.co
 // @updateURL    https://raw.githubusercontent.com/SotoJr/jd-automation/main/dispatch/sila-enviar-dispatch.user.js
 // @downloadURL  https://raw.githubusercontent.com/SotoJr/jd-automation/main/dispatch/sila-enviar-dispatch.user.js
 // ==/UserScript==
